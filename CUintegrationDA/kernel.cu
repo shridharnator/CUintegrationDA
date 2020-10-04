@@ -1,6 +1,7 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
 #include<iostream>
+//#include<stdlib.h>
 
 #include <stdio.h>
 
@@ -18,13 +19,16 @@ __global__ void sumintegral(double lowbound1, int n, double dx,double *d_c)
 {
 	
 	//double c = 0;
-	for (int i = 0; i < n; i++) {
-		double xi = lowbound1 + (i * dx);
+	int i = threadIdx.x;
+	//if(i<n) {
+		/*double xi = lowbound1 + (i * dx);
 		double funValue = fun(xi);
 		double rectangleArea = funValue * dx;
-		*d_c += rectangleArea;
+		*d_c += rectangleArea;*/
+		*d_c += 1;
 
-	}
+		printf("love");
+	//}
 	//printf("%f ",c);
 	
 }
@@ -33,18 +37,26 @@ __global__ void sumintegral(double lowbound1, int n, double dx,double *d_c)
 int main() {
 	
 	double lowbound1 = 3;	
-	long int n = 1;	
+	long int n = 10;	
 	double c;
+
+	c = 0;
 	double *d_c;
 	double size = sizeof(double);
+	
 	cudaMalloc((void**)&d_c, size);
-	c = 0;
-	cudaMemcpy(&d_c, &c, size, cudaMemcpyHostToDevice);
+	d_c = &c;
+	//std::cout << *d_c << std::endl;
+	
+	//cudaMemcpy(d_c, &c, size, cudaMemcpyHostToDevice);
 	
 	double dx = (double)lowbound1/n;	
-	 sumintegral << <1, 1 >> > (lowbound1, n, dx,d_c);
-	 cudaMemcpy(&c, &d_c, size, cudaMemcpyDeviceToHost);
-	 cudaFree(&d_c);
+	 sumintegral << <1, 10 >> > (lowbound1, n, dx,d_c);
+	 cudaDeviceSynchronize();
+	// cudaMemcpy(&c, d_c, size, cudaMemcpyDeviceToHost); 
+	 c = *d_c;
+	
 	 printf("%f", c);
+	 cudaFree(&d_c);
     return 0;
 }
